@@ -56,9 +56,16 @@ struct ContentView: View {
             List{
                 ForEach(viewModel.resp.results, id:\.self){
                     ch in
-                    HStack{
-                        Text("\(ch.name)").bold()
-                    }.padding(3)
+                    NavigationLink(
+                        destination: charDetail(charac:ch),
+                        label: {
+                            HStack{
+                                Text("\(ch.name)").bold()
+                            }.padding(3)
+                        })
+//                    HStack{
+//                        Text("\(ch.name)").bold()
+//                    }.padding(3)
                 }
             }
                 .navigationTitle("character rick")

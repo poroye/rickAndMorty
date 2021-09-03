@@ -14,7 +14,7 @@ struct charDetail: View {
     var body: some View {
         VStack{
             Text(charac.name)
-        }
+        }.navigationBarTitle(Text(charac.name), displayMode: .inline)
     }
 }
 //
