@@ -8,25 +8,39 @@
 import SwiftUI
 
 struct characterList:Hashable, Codable{
-    let info:information
     let results:[result]
 }
 
 struct result:Hashable, Codable{
     let name:String
+    let status:String
+    let species:String
+    let type:String
+    let gender:String
+    let origin:originStr
+    let location:location
+    let image:String
+    let episode:[String]
 }
 
-struct information:Hashable, Codable{
-    let count:Int
-    let pages:Int
+struct originStr:Hashable, Codable{
+    let name:String
+}
+
+struct location:Hashable, Codable{
+    let name:String
 }
 
 class ViewModel:ObservableObject{
     
-    @Published var resp:characterList = characterList(info:information(count:0,pages:0),results:[])
+    @Published var resp:characterList = characterList(results:[])
+    
+    var page:Int = 1
+    
+    @Published var tableOn:Bool = false
     
     func fetch(){
-        guard let url = URL(string: "https://rickandmortyapi.com/api/character?page=1") else{return}
+        guard let url = URL(string: "https://rickandmortyapi.com/api/character?page=\(String(page))") else{return}
         let task = URLSession.shared.dataTask(with: url){
             data, res, err in
             guard let data = data , err == nil else {return}
@@ -35,13 +49,10 @@ class ViewModel:ObservableObject{
                 DispatchQueue.main.async {
                     self.resp = chars
                 }
-                print("\(chars.info.count) \(chars.results[0].name)")
-                
             }catch{
                 print(error)
             }
             print("fetched!")
-            
         }
         task.resume()
     }
@@ -49,27 +60,83 @@ class ViewModel:ObservableObject{
 
 struct ContentView: View {
     @StateObject var viewModel = ViewModel()
+    
+    
+    func back(){
+        if viewModel.page > 1{
+            viewModel.page -= 1
+            print("<")
+                viewModel.fetch()
+        }else{
+            print("can't go left any more")
+        }
+    }
+    
+    func next(){
+        if viewModel.page < 34{
+            viewModel.page += 1
+            print(">")
+            viewModel.fetch()
+        }else{
+            print("can't go right any more")
+        }
+    }
+    
+    func tabOnOff(){
+        viewModel.tableOn.toggle()
+        print("toggle")
+    }
+    
     var body: some View {
-//        Text("Hello, world!")
-//            .padding()
-        NavigationView{
-            List{
-                ForEach(viewModel.resp.results, id:\.self){
-                    ch in
-                    NavigationLink(
-                        destination: charDetail(charac:ch),
-                        label: {
-                            HStack{
+        if viewModel.tableOn == false{
+            NavigationView{
+                List{
+                    ForEach(viewModel.resp.results, id:\.self){
+                        ch in
+                        NavigationLink(
+                            destination: charDetail(charac:ch),
+                            label: {
                                 Text("\(ch.name)").bold()
-                            }.padding(3)
-                        })
-//                    HStack{
-//                        Text("\(ch.name)").bold()
-//                    }.padding(3)
+                            }
+                        )
+                    }
                 }
+                    .navigationTitle("rick and morty list")
+                    .onAppear(perform: viewModel.fetch)
             }
-                .navigationTitle("character rick")
-                .onAppear(perform: viewModel.fetch)
+        }else{
+            NavigationView{
+                ScrollView{
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], content: {
+                            ForEach(viewModel.resp.results, id: \.self){ch in
+                                NavigationLink(
+                                    destination: charDetail(charac:ch),
+                                    label: {
+                                        VStack{
+                                            Image(uiImage:ch.image.load())
+                                                .resizable()
+                                                .frame(width: 100, height: 100)
+                                            Text(ch.name)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
+                .navigationTitle("rick and morty table")
+            }
+        }
+        HStack{
+            Button("<",action: back).padding(20)
+            Spacer()
+            if viewModel.tableOn{
+                Button("list",action:tabOnOff)
+            }else{
+                Button("table",action:tabOnOff)
+            }
+            Spacer()
+            Button(">",action: next).padding(20)
         }
     }
 }
