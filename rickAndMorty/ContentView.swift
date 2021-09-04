@@ -87,7 +87,11 @@ struct ContentView: View {
         print("toggle")
     }
     
+    
+    
     var body: some View {
+        
+        
         if viewModel.tableOn == false{
             NavigationView{
                 List{
@@ -128,15 +132,25 @@ struct ContentView: View {
             }
         }
         HStack{
-            Button("<",action: back).padding(20)
             Spacer()
-            if viewModel.tableOn{
-                Button("list",action:tabOnOff)
+            if viewModel.page > 1{
+                Button("<",action: back).padding(20).font(.title)
             }else{
-                Button("table",action:tabOnOff)
+                Button("<",action: back).padding(20)
             }
             Spacer()
-            Button(">",action: next).padding(20)
+            if viewModel.tableOn{
+                Button("list",action:tabOnOff).font(.title)
+            }else{
+                Button("table",action:tabOnOff).font(.title)
+            }
+            Spacer()
+            if viewModel.page < 34{
+                Button(">",action: next).padding(20).font(.title)
+            }else{
+                Button(">",action: next).padding(20)
+            }
+            Spacer()
         }
     }
 }
