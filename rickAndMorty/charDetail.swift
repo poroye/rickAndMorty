@@ -15,19 +15,12 @@ extension String{
             }
             let data:Data = try Data(contentsOf: url)
             return UIImage(data:data) ?? UIImage()
-        }catch{
-            return UIImage()
-        }
+        }catch{return UIImage()}
     }
 }
 
 struct charDetail: View {
-    
     let charac:result
-    
-//    let layout = [
-//        GridItem(.adaptive(minimum: 50))
-//    ]
     
     var body: some View {
         VStack(alignment: .center, spacing: 10){
@@ -75,9 +68,3 @@ struct charDetail: View {
         }.navigationBarTitle(Text(charac.name), displayMode: .inline)
     }
 }
-//
-//struct charDetail_Previews: PreviewProvider {
-//    static var previews: some View {
-//        charDetail()
-//    }
-//}

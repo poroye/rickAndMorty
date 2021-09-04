@@ -17,13 +17,13 @@ struct result:Hashable, Codable{
     let species:String
     let type:String
     let gender:String
-    let origin:originStr
+    let origin:origin
     let location:location
     let image:String
     let episode:[String]
 }
 
-struct originStr:Hashable, Codable{
+struct origin:Hashable, Codable{
     let name:String
 }
 
@@ -46,52 +46,35 @@ class ViewModel:ObservableObject{
             guard let data = data , err == nil else {return}
             do{
                 let chars = try JSONDecoder().decode(characterList.self, from: data)
-                DispatchQueue.main.async {
-                    self.resp = chars
-                }
-            }catch{
-                print(error)
-            }
-            print("fetched!")
+                DispatchQueue.main.async {self.resp = chars}
+            }catch{print(error)}
         }
         task.resume()
+    }
+    
+    func back(){
+        if page > 1{
+            page -= 1
+            fetch()
+        }
+    }
+    
+    func next(){
+        if page < 34{
+            page += 1
+            fetch()
+        }
+    }
+    
+    func tabOnOff(){
+        tableOn.toggle()
     }
 }
 
 struct ContentView: View {
     @StateObject var viewModel = ViewModel()
     
-    
-    func back(){
-        if viewModel.page > 1{
-            viewModel.page -= 1
-            print("<")
-                viewModel.fetch()
-        }else{
-            print("can't go left any more")
-        }
-    }
-    
-    func next(){
-        if viewModel.page < 34{
-            viewModel.page += 1
-            print(">")
-            viewModel.fetch()
-        }else{
-            print("can't go right any more")
-        }
-    }
-    
-    func tabOnOff(){
-        viewModel.tableOn.toggle()
-        print("toggle")
-    }
-    
-    
-    
     var body: some View {
-        
-        
         if viewModel.tableOn == false{
             NavigationView{
                 List{
@@ -99,9 +82,7 @@ struct ContentView: View {
                         ch in
                         NavigationLink(
                             destination: charDetail(charac:ch),
-                            label: {
-                                Text("\(ch.name)").bold()
-                            }
+                            label: { Text("\(ch.name)").bold() }
                         )
                     }
                 }
@@ -134,21 +115,21 @@ struct ContentView: View {
         HStack{
             Spacer()
             if viewModel.page > 1{
-                Button("<",action: back).padding(20).font(.title)
+                Button("<",action: viewModel.back).padding(20).font(.title)
             }else{
-                Button("<",action: back).padding(20)
+                Button("<",action: viewModel.back).padding(20)
             }
             Spacer()
             if viewModel.tableOn{
-                Button("list",action:tabOnOff).font(.title)
+                Button("list",action:viewModel.tabOnOff).font(.title)
             }else{
-                Button("table",action:tabOnOff).font(.title)
+                Button("table",action:viewModel.tabOnOff).font(.title)
             }
             Spacer()
             if viewModel.page < 34{
-                Button(">",action: next).padding(20).font(.title)
+                Button(">",action: viewModel.next).padding(20).font(.title)
             }else{
-                Button(">",action: next).padding(20)
+                Button(">",action: viewModel.next).padding(20)
             }
             Spacer()
         }
