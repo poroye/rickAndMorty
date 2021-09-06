@@ -2,4 +2,5 @@
 
 ![](ezgif-3-943628d414de.gif)
 
-## my first swiftUI code
+my first swiftUI code 
+base on https://rickandmortyapi.com/
