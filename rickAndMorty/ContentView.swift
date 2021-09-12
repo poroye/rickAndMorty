@@ -8,7 +8,11 @@
 import SwiftUI
 
 struct characterList:Hashable, Codable{
-    let results:[result]
+    var results:[result]
+    
+    mutating func add(ls:characterList){
+        results.append(contentsOf: ls.results)
+    }
 }
 
 struct result:Hashable, Codable{
@@ -32,9 +36,8 @@ struct location:Hashable, Codable{
 }
 
 class ViewModel:ObservableObject{
-    
     @Published var resp:characterList = characterList(results:[])
-    
+        
     var page:Int = 1
     
     @Published var tableOn:Bool = false
@@ -46,26 +49,15 @@ class ViewModel:ObservableObject{
             guard let data = data , err == nil else {return}
             do{
                 let chars = try JSONDecoder().decode(characterList.self, from: data)
-                DispatchQueue.main.async {self.resp = chars}
+                DispatchQueue.main.async {
+//                    self.resp = chars
+                    self.resp.add(ls: chars)
+                }
             }catch{print(error)}
         }
         task.resume()
+        print("fetch > ",page)
     }
-    
-    func back(){
-        if page > 1{
-            page -= 1
-            fetch()
-        }
-    }
-    
-    func next(){
-        if page < 34{
-            page += 1
-            fetch()
-        }
-    }
-    
     func tabOnOff(){
         tableOn.toggle()
     }
@@ -78,12 +70,17 @@ struct ContentView: View {
         if viewModel.tableOn == false{
             NavigationView{
                 List{
-                    ForEach(viewModel.resp.results, id:\.self){
-                        ch in
+                    ForEach(viewModel.resp.results.indices, id:\.self){
+                        chIndex in
                         NavigationLink(
-                            destination: charDetail(charac:ch),
-                            label: { Text("\(ch.name)").bold() }
-                        )
+                            destination: charDetail(charac:viewModel.resp.results[chIndex]),
+                            label: { Text("\( viewModel.resp.results[chIndex].name)").bold() }
+                        ).onAppear(perform: {
+                            if chIndex > viewModel.resp.results.count-2{
+                                viewModel.page += 1
+                                viewModel.fetch()
+                            }
+                        })
                     }
                 }
                     .navigationTitle("rick and morty list")
@@ -93,18 +90,23 @@ struct ContentView: View {
             NavigationView{
                 ScrollView{
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], content: {
-                            ForEach(viewModel.resp.results, id: \.self){ch in
+                        ForEach(viewModel.resp.results.indices, id: \.self){chIndex in
                                 NavigationLink(
-                                    destination: charDetail(charac:ch),
+                                    destination: charDetail(charac:viewModel.resp.results[chIndex]),
                                     label: {
                                         VStack{
-                                            Image(uiImage:ch.image.load())
+                                            Image(uiImage:viewModel.resp.results[chIndex].image.load())
                                                 .resizable()
                                                 .frame(width: 100, height: 100)
-                                            Text(ch.name)
+                                            Text(viewModel.resp.results[chIndex].name)
                                         }
                                     }
-                                )
+                                ).onAppear(perform: {
+                                    if chIndex > viewModel.resp.results.count-2{
+                                        viewModel.page += 1
+                                        viewModel.fetch()
+                                    }
+                                })
                             }
                         }
                     )
@@ -114,22 +116,10 @@ struct ContentView: View {
         }
         HStack{
             Spacer()
-            if viewModel.page > 1{
-                Button("<",action: viewModel.back).padding(20).font(.title)
-            }else{
-                Button("<",action: viewModel.back).padding(20)
-            }
-            Spacer()
             if viewModel.tableOn{
                 Button("list",action:viewModel.tabOnOff).font(.title)
             }else{
                 Button("table",action:viewModel.tabOnOff).font(.title)
-            }
-            Spacer()
-            if viewModel.page < 34{
-                Button(">",action: viewModel.next).padding(20).font(.title)
-            }else{
-                Button(">",action: viewModel.next).padding(20)
             }
             Spacer()
         }
